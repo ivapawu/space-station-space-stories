@@ -7,6 +7,7 @@ using Content.Server.Popups;
 using Content.Server.Station.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.UserInterface;
+using Content.Server.Administration.Systems;
 using Content.Shared.Access.Systems;
 using Content.Shared.Bed.Cryostorage;
 using Content.Shared.Chat;
@@ -28,6 +29,7 @@ namespace Content.Server.Bed.Cryostorage;
 /// <inheritdoc/>
 public sealed class CryostorageSystem : SharedCryostorageSystem
 {
+    [Dependency] private readonly AdminSystem _adminSystem = default!;
     [Dependency] private readonly IChatManager _chatManager = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly AudioSystem _audio = default!;
@@ -136,6 +138,10 @@ public sealed class CryostorageSystem : SharedCryostorageSystem
             comp.GracePeriodEndTime = Timing.CurTime + cryostorageComponent.NoMindGracePeriod;
         comp.AllowReEnteringBody = false;
         comp.UserId = args.Mind.Comp.UserId;
+        if (comp.UserId != null && _playerManager.TryGetSessionById(comp.UserId, out var targetPlayer))
+        {
+            _adminSystem.Erase(targetPlayer);
+        }
     }
 
     private void PlayerStatusChanged(object? sender, SessionStatusEventArgs args)
